@@ -1,0 +1,27 @@
+# Retrieve metadata about the currently authenticated Azure client — i.e., the identity Terraform is using to interact with Azure
+# From this we will get a Tenant ID in outputs.
+data "azurerm_client_config" "current" {}
+
+resource "azuread_application" "this" {
+  display_name = var.service_principal_display_name
+}
+
+resource "azuread_service_principal" "this" {
+  client_id = azuread_application.this.client_id
+}
+
+resource "time_rotating" "month" {
+  rotation_days = 30
+}
+
+resource "azuread_service_principal_password" "this" {
+  service_principal_id = azuread_service_principal.this.id
+  rotate_when_changed  = { rotation = time_rotating.month.id }
+}
+
+resource "azurerm_role_assignment" "test" {
+  scope                = var.scope
+  role_definition_name = var.role
+  principal_id = azuread_service_principal.this.object_id
+  skip_service_principal_aad_check = true # without this running this code is taking a lot of time.
+}

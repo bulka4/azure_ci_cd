@@ -1,0 +1,65 @@
+#!/bin/sh
+
+
+# ============== Install Docker ==============
+
+# Add Docker's official GPG key:
+sudo apt-get update
+sudo apt-get -y install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo \"$${UBUNTU_CODENAME:-$$VERSION_CODENAME}\") stable" | \
+  sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+sudo apt-get update
+
+# install latest version of Docker
+sudo apt-get -y install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+
+# add user to the docker group in order to allow using docker commands on the created VM after connecting to it using SSH.
+# It is not necessary to run docker containers automatically through Azure Pipelines Self Hosted Agents.
+sudo usermod -aG docker ${username}
+
+
+
+
+
+
+
+# ============== Install Azure Pipelines Self-Hosted agent ==============
+
+# install an Azure Pipelines Self-Hosted Agent needed to run CI/CD pipelines which will be deploying code to the created VM.
+
+# URL from which we will download an Agent
+agent_download_url="${agent_download_url}"
+# Get name of the downloaded file
+filename="$${agent_download_url##*/}"
+
+wget -P /home/${username}/downloads $agent_download_url
+mkdir /home/${username}/myagent && cd /home/${username}/myagent
+tar zxvf /home/${username}/downloads/$filename
+
+# We need to create the AGENT_ALLOW_RUNASROOT env variable before executing config.sh.
+# If we check the content of the config.sh file, we will notice that there is an 'if' statement which checks which user is executing
+# that script and if the AGENT_ALLOW_RUNASROOT env variable exists. If those conditions are not met then the script will through an
+# error 'Must not run with sudo'.
+export AGENT_ALLOW_RUNASROOT="1"
+./config.sh \
+	--unattended \
+  --url ${url} \
+  --auth pat \
+  --token ${token} \
+  --pool ${pool_name} \
+  --agent ${agent_name}
+#./run.sh
+
+# I think that we can't provide the 'username' argument to the 'sudo ./svc.sh install' command because the '_diag' folder
+# in the myagent folder is owned by the root user . When running the 'sudo ./svc.sh install' command then it is trying to create files 
+# in that folder so it needs to have permissions to do so. If we don't provide the 'username' argument then the root user will be used
+# to create files in the '_diag' folder.
+sudo ./svc.sh install
+sudo ./svc.sh start
