@@ -1,4 +1,4 @@
-Documentation for this project can be found here - [github.com](https://github.com/bulka4/obsidian-notes-IT-personal-projects-and-knowledge-base/blob/main/3%20-%20Notes/CI-CD%20pipeline%20with%20Azure%20DevOps,%20Docker%20and%20cloud%20Linux%20VM.md), in another repository.
+Documentation for this project can be found here - [github.com](https://github.com/bulka4/obsidian-notes-IT-personal-projects-and-knowledge-base/blob/main/3%20-%20Notes/CI-CD%20pipeline%20with%20Azure%20DevOps,%20Docker%20and%20cloud%20Linux%20VM%20project.md), in another repository.
 
 That repository is a private, technical knowledge base which includes much more than just documentation for this project.
 
